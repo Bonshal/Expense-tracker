@@ -2,6 +2,7 @@
   "expo": {
     "name": "expense-tracker2",
     "slug": "expense-tracker2",
+    "scheme": "expensetracker2",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,16 +14,26 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.expensetracker2"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.anonymous.expensetracker2"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "79bc7d3b-9138-406f-9ca7-a7ccc82bc0f9"
+      }
+    },
+    "plugins": [
+      "expo-router"
+    ]
   }
 }
