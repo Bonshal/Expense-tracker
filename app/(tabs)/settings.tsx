@@ -3,6 +3,7 @@ import {
   View,
   StyleSheet,
   ScrollView,
+  Alert,
 } from 'react-native';
 import {
   List,
@@ -19,6 +20,8 @@ import {
 import { useColorScheme } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '../../src/contexts/SettingsContext';
+import { supabase } from '../../src/services/supabase';
+import { useRouter } from 'expo-router';
 
 // Currency options
 const CURRENCIES = [
@@ -65,6 +68,8 @@ export default function SettingsScreen() {
   const theme = useTheme();
   const colorScheme = useColorScheme();
   const { t } = useTranslation();
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Currency Settings
   const handleCurrencyChange = async (newCurrency: string) => {
@@ -108,6 +113,27 @@ export default function SettingsScreen() {
 
   const handleDeleteBudget = async (category: string) => {
     await deleteBudget(category);
+  };
+
+  // --- Logout Handler ---
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Error logging out:", error);
+        Alert.alert("Logout Failed", error.message);
+      } else {
+        // Navigate to login screen after successful sign out
+        // Replace the current route stack to prevent going back
+        router.replace('/(auth)/login'); 
+      }
+    } catch (err) {
+      console.error("Unexpected error during logout:", err);
+      Alert.alert("Logout Failed", "An unexpected error occurred.");
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -196,6 +222,22 @@ export default function SettingsScreen() {
           left={props => <List.Icon {...props} icon="plus" />}
           onPress={() => setShowBudgetModal(true)}
         />
+      </List.Section>
+
+      {/* --- Logout Section --- */}
+      <Divider style={styles.divider} />
+      <List.Section>
+        <List.Subheader>{t('account')}</List.Subheader>
+        <Button
+          mode="contained"
+          icon="logout"
+          onPress={handleLogout}
+          loading={isLoggingOut}
+          disabled={isLoggingOut}
+          style={[styles.button, { backgroundColor: theme.colors.error }]}
+        >
+          {t('logout')}
+        </Button>
       </List.Section>
 
       {/* Currency Selection Modal */}
@@ -302,11 +344,27 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    fontSize: 18,
+    marginBottom: 15,
+    textAlign: 'center',
   },
   input: {
-    marginBottom: 16,
+    marginBottom: 10,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 15,
+  },
+  modalButton: {
+    marginLeft: 8,
+  },
+  divider: {
+    marginVertical: 10,
+  },
+  button: {
+    marginHorizontal: 16,
+    marginTop: 10,
+    marginBottom: 20,
   },
 }); 

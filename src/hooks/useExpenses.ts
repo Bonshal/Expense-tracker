@@ -12,11 +12,25 @@ export function useExpenses() {
   const fetchExpenses = async (startDate?: Date, endDate?: Date) => {
     try {
       setLoading(true);
+      
+      // Get current user ID first
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+          console.error('[useExpenses] Error fetching user for fetch:', userError);
+          setExpenses([]); // Clear expenses if no user
+          setError(userError || new Error('User not authenticated'));
+          setLoading(false);
+          return; 
+      }
+      
+      // Start query
       let query = supabase
         .from('expenses')
         .select('*')
+        .eq('user_id', user.id)
         .order('date', { ascending: false });
 
+      // Add date filters if provided
       if (startDate) {
         query = query.gte('date', startDate.toISOString());
       }
@@ -24,12 +38,16 @@ export function useExpenses() {
         query = query.lte('date', endDate.toISOString());
       }
 
+      // Execute query
       const { data, error } = await query;
 
       if (error) throw error;
+      console.log(`[useExpenses] Fetched ${data?.length ?? 0} expenses for user ${user.id}`);
       setExpenses(data || []);
     } catch (err) {
+      console.error("[useExpenses] Error fetching expenses:", err);
       setError(err instanceof Error ? err : new Error('Failed to fetch expenses'));
+      setExpenses([]); // Clear expenses on error
     } finally {
       setLoading(false);
     }
@@ -114,7 +132,17 @@ export function useExpenses() {
   };
 
   useEffect(() => {
+    console.log("[useExpenses] useEffect triggered, fetching expenses.")
     fetchExpenses();
+    
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("[useExpenses] Auth state changed, refetching expenses.");
+      fetchExpenses();
+    });
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
   }, []);
 
   return {
