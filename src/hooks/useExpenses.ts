@@ -38,20 +38,45 @@ export function useExpenses() {
   const addExpense = async (newExpense: NewExpenseData) => {
     try {
       setAdding(true);
+      
+      // Get current user ID
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+          console.error('[useExpenses] Error fetching user for insert:', userError);
+          throw userError || new Error('User not authenticated');
+      }
+      
+      const expenseDataWithUser = {
+        ...newExpense,
+        user_id: user.id // Add user_id to the data
+      };
+      
+      console.log('[useExpenses] Attempting to insert with user_id:', expenseDataWithUser);
       const { data, error } = await supabase
         .from('expenses')
-        .insert([newExpense])
+        .insert([expenseDataWithUser]) // Insert data including user_id
         .select()
         .single();
 
-      if (error) throw error;
-      setExpenses(prev => [data, ...prev]);
+      if (error) {
+        console.error('[useExpenses] Supabase insert error:', error);
+        throw error;
+      } 
+      
+      console.log('[useExpenses] Supabase insert success, data:', data);
+      setExpenses(prev => {
+          const newState = [data, ...prev];
+          console.log('[useExpenses] setExpenses called, new count:', newState.length);
+          return newState;
+      });
       return data;
     } catch (err) {
+      console.error('[useExpenses] Error in addExpense function:', err);
       setError(err instanceof Error ? err : new Error('Failed to add expense'));
-      throw err;
+      throw err; 
     } finally {
       setAdding(false);
+      console.log('[useExpenses] addExpense finished.');
     }
   };
 

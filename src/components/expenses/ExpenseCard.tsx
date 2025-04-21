@@ -14,6 +14,7 @@ export interface ExpenseCardProps {
   onToggleFavorite?: (id: string, currentFavorite: boolean) => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onAddToToday?: (card: ExpenseCardProps) => void; // Add this prop
   isDragging?: boolean; // Add isDragging prop
   style?: StyleProp<ViewStyle>; // Allow passing custom styles
   currencySymbol?: string; // Add currency symbol prop
@@ -30,6 +31,7 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({
   onToggleFavorite,
   onEdit,
   onDelete,
+  onAddToToday, // Destructure the new prop
   isDragging, // Destructure isDragging
   style, // Destructure style
   currencySymbol = '$', // Default currency symbol
@@ -53,6 +55,15 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({
     setMenuVisible(false);
     if (onDelete) {
       onDelete();
+    }
+  };
+
+  // Handler for the new "Add to Today" action
+  const handleAddToToday = () => {
+    setMenuVisible(false);
+    if (onAddToToday) {
+      // Pass the relevant card data back up
+      onAddToToday({ id, name, amount, category, is_favorite });
     }
   };
 
@@ -83,6 +94,11 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({
               />
             }
           >
+            <Menu.Item
+              onPress={handleAddToToday}
+              title="Add to Today"
+              leadingIcon="calendar-plus" // Example icon
+            />
             <Menu.Item
               onPress={handleEdit}
               title="Edit"

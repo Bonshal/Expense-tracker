@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef, ComponentType, ReactElement, JSXElementConstructor } from 'react';
 import {
   View,
   Text,
@@ -40,6 +40,7 @@ import Animated, {
   useAnimatedReaction,
   useAnimatedStyle,
 } from 'react-native-reanimated';
+import { parseISO, getYear, getMonth, getDate, format } from 'date-fns';
 
 interface LayoutData {
   x: number;
@@ -57,7 +58,7 @@ interface SafeDraggableFlatListProps<T> {
   onDragEnd?: (params: DragEndParams<T>) => void;
   horizontal?: boolean;
   showsHorizontalScrollIndicator?: boolean;
-  ListEmptyComponent?: React.ReactNode;
+  ListEmptyComponent?: ComponentType<any> | ReactElement<any, string | JSXElementConstructor<any>> | null | undefined;
   contentContainerStyle?: any;
   activationDistance?: number;
   [key: string]: any; // Allow any other props
@@ -80,14 +81,21 @@ function SafeDraggableFlatList<T>(props: SafeDraggableFlatListProps<T>) {
 
   try {
     // Extra safety check for data
-    if (!props.data || !Array.isArray(props.data) || props.data.length === 0) {
+    if (!props.data || !Array.isArray(props.data)) {
+      // Allow empty data array, render ListEmptyComponent if provided
+      if (props.ListEmptyComponent) {
+        // Render ListEmptyComponent directly if data is empty or invalid
+        const ListEmpty = props.ListEmptyComponent;
+        // Check if it's a component type or a React element
+        return typeof ListEmpty === 'function' ? <ListEmpty /> : ListEmpty;
+      }
       return (
         <Text style={{ padding: 20, textAlign: 'center' }}>
           No items to display
         </Text>
       );
     }
-
+    // Pass props through only if data is a valid array (can be empty)
     return <DraggableFlatList<T> {...props} />;
   } catch (error) {
     console.error("[SafeDraggableFlatList] Error:", error);
@@ -140,20 +148,63 @@ export default function DashboardScreen() {
   // Shared value to track if DraggableFlatList drag is active
   const isDraggingShared = useSharedValue(false);
 
-  const todaysExpenses = useMemo(() => {
+  // Log the expenses array length as received from the hook
+  console.log(`[DashboardScreen] Render - expenses length: ${expenses?.length ?? 'undefined'}`);
+
+  const { dailyTotal, monthlyTotal, todaysExpensesList } = useMemo(() => {
     if (!expenses || !Array.isArray(expenses)) {
-      return [];
+      return { dailyTotal: 0, monthlyTotal: 0, todaysExpensesList: [] };
     }
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    return expenses.filter((exp) => {
-      const expenseDate = new Date(exp.date);
-      expenseDate.setHours(0, 0, 0, 0);
-      return expenseDate.getTime() === today.getTime();
+    const todayYear = getYear(today);
+    const todayMonth = getMonth(today);
+    const todayDate = getDate(today);
+
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    let dayTotal = 0;
+    let monthTotal = 0;
+    const todaysList: Expense[] = []; // Explicitly type the list
+
+    expenses.forEach((expense) => {
+      if (!expense || !expense.date) return;
+      
+      try {
+        const expenseDate = parseISO(expense.date);
+        const expenseYear = getYear(expenseDate);
+        const expenseMonth = getMonth(expenseDate);
+        const expenseDay = getDate(expenseDate);
+
+        // Compare year, month, and day directly
+        if (
+          expenseYear === todayYear &&
+          expenseMonth === todayMonth &&
+          expenseDay === todayDate
+        ) {
+          dayTotal += expense.amount;
+          todaysList.push(expense);
+        }
+
+        // Check if within the current month (use original date object)
+        if (expenseDate >= firstDayOfMonth && expenseDate <= today) {
+          monthTotal += expense.amount;
+        }
+      } catch (e) {
+        console.error("Error parsing expense date:", expense.date, e);
+      }
     });
+
+    // Log the result of the calculation
+    console.log(`[DashboardScreen] useMemo - calculated todaysExpensesList length: ${todaysList.length}, dailyTotal: ${Number(dayTotal.toFixed(2))}`);
+    return { 
+      dailyTotal: Number(dayTotal.toFixed(2)), 
+      monthlyTotal: Number(monthTotal.toFixed(2)),
+      todaysExpensesList: todaysList // Return the filtered list
+    };
   }, [expenses]);
+
+  // Log the final list length being used for rendering
+  console.log(`[DashboardScreen] Render - todaysExpensesList length: ${todaysExpensesList?.length ?? 'undefined'}`);
 
   const handleAddExpenseCard = async (cardData: { name: string; amount: number; category?: string }) => {
     await addExpenseCard(cardData);
@@ -200,13 +251,47 @@ export default function DashboardScreen() {
       await addExpense(expenseData);
       setSnackbarMessage(`${currencySymbol}${card.amount.toFixed(2)} added to today's expenses`);
       setSnackbarVisible(true);
-      refetchExpenses();
     } catch (err) {
       console.error('[Dashboard DnD] Error adding expense from drop:', err);
       setSnackbarMessage('Error adding expense');
       setSnackbarVisible(true);
     }
-  }, [addExpense, currencySymbol, refetchExpenses]);
+  }, [addExpense, currencySymbol]);
+
+  // Re-add handler for the "Add to Today" button click
+  const handleAddToTodayClick = useCallback(async (card: ExpenseCardProps) => {
+    if (!card) {
+      console.warn('[Dashboard Button] Attempted to add expense from undefined card');
+      return;
+    }
+    
+    // Log the ID of the card being added
+    console.log(`[Dashboard Button] Trying to add expense based on card ID: ${card.id}`); 
+
+    // Format the *local* current date correctly
+    const todayString = format(new Date(), 'yyyy-MM-dd'); 
+    console.log(`[Dashboard Button] Generated local date string: ${todayString}`);
+
+    const expenseData = {
+      amount: card.amount,
+      description: card.name,
+      category: card.category || 'Uncategorized',
+      date: todayString, // Use the correctly formatted local date string
+      expense_card_id: card.id, // Link to the original card
+    };
+
+    try {
+      console.log('[Dashboard Button] Adding expense:', expenseData);
+      await addExpense(expenseData); // Use addExpense from useExpenses hook
+      setSnackbarMessage(`${currencySymbol}${card.amount.toFixed(2)} added to today's expenses`);
+      setSnackbarVisible(true);
+      // refetchExpenses(); // Temporarily comment out to rely on optimistic update
+    } catch (err) {
+      console.error('[Dashboard Button] Error adding expense:', err);
+      setSnackbarMessage('Error adding expense');
+      setSnackbarVisible(true);
+    }
+  }, [addExpense, currencySymbol]);
 
   const handleDragBegin = useCallback((index: number) => {
     const safeExpenseCards = expenseCards || [];
@@ -248,16 +333,17 @@ export default function DashboardScreen() {
       <ScaleDecorator>
         <ExpenseCard
           {...item}
-          onLongPress={drag} 
+          onLongPress={drag}
           onToggleFavorite={toggleFavorite}
           onEdit={() => handleEditCardPress(item)}
           onDelete={() => handleDeleteExpenseCard(item.id)}
+          onAddToToday={() => handleAddToTodayClick(item)}
           isDragging={isActive}
           style={[styles.quickAddCard, isActive ? styles.draggingCard : {}]}
         />
       </ScaleDecorator>
     );
-  }, [toggleFavorite, handleEditCardPress, handleDeleteExpenseCard, currencySymbol]);
+  }, [toggleFavorite, handleEditCardPress, handleDeleteExpenseCard, currencySymbol, handleAddToTodayClick]);
 
   const openAddExpenseModal = () => setIsModalVisible(true);
   const closeAddExpenseModal = () => setIsModalVisible(false);
@@ -273,39 +359,6 @@ export default function DashboardScreen() {
       console.error('Error adding expense from modal:', errorAdding);
     }
   };
-
-  const { dailyTotal, monthlyTotal } = useMemo(() => {
-    if (!expenses || !Array.isArray(expenses)) {
-      return { dailyTotal: 0, monthlyTotal: 0 };
-    }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    let dayTotal = 0;
-    let monthTotal = 0;
-
-    expenses.forEach((expense) => {
-      if (!expense) return;
-      
-      const expenseDate = new Date(expense.date);
-      expenseDate.setHours(0, 0, 0, 0);
-
-      if (expenseDate.getTime() === today.getTime()) {
-        dayTotal += expense.amount;
-      }
-
-      if (expenseDate >= firstDayOfMonth && expenseDate <= today) {
-        monthTotal += expense.amount;
-      }
-    });
-
-    return { 
-      dailyTotal: Number(dayTotal.toFixed(2)), 
-      monthlyTotal: Number(monthTotal.toFixed(2)) 
-    };
-  }, [expenses]);
 
   const safeExpenseCards = useMemo(() => {
     try {
@@ -544,10 +597,10 @@ export default function DashboardScreen() {
               {loadingExpenses && <ActivityIndicator animating={true} />}
               {errorExpenses && <Paragraph style={styles.errorText}>Could not load today's expenses.</Paragraph>}
               {!loadingExpenses && !errorExpenses && (
-                !todaysExpenses || todaysExpenses.length === 0 ? (
+                !todaysExpensesList || todaysExpensesList.length === 0 ? (
                   <Paragraph>No expenses logged today.</Paragraph>
                 ) : (
-                  todaysExpenses.map((item) => (
+                  todaysExpensesList.map((item) => (
                     item && (
                       <List.Item
                         key={item.id}
