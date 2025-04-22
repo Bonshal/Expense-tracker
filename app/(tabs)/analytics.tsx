@@ -124,9 +124,11 @@ export default function AnalyticsScreen() {
             <Card style={styles.card}>
               <Card.Content>
                 <Title>Total Spending</Title>
-                <Paragraph style={styles.totalAmount}>
-                  {currencySymbol}{(totalSpending || 0).toFixed(2)}
-                </Paragraph>
+                <View style={styles.totalAmountContainer}>
+                  <Text style={styles.totalAmount}>
+                    {currencySymbol}{(totalSpending || 0).toFixed(2)}
+                  </Text>
+                </View>
               </Card.Content>
             </Card>
 
@@ -239,16 +241,26 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: 16,
+    padding: 16, // Ensure sufficient padding
+    alignItems: 'center', // Center align content
+    justifyContent: 'center', // Center content vertically
+    minHeight: 200, // Set a minimum height to prevent content from being cut off
   },
   chartContainer: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  totalAmount: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
+  totalAmountContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 8,
+  },
+  totalAmount: {
+    fontSize: 30, // Further increase font size for better visibility
+    fontWeight: 'bold',
+  
+    // marginTop: 8,
+    color: '#000', // Ensure the text color contrasts with the background
   },
   averageRow: {
     flexDirection: 'row',
@@ -256,4 +268,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 4,
   },
-}); 
+});
