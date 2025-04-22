@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   Dimensions,
 } from 'react-native';
-import type { ViewProps, ScrollViewProps, ActivityIndicatorProps } from 'react-native';
+import type { ViewProps, FlatListProps, ActivityIndicatorProps } from 'react-native';
 import { Appbar, Card, Title, Paragraph, Button } from 'react-native-paper';
 import { LineChart } from 'react-native-chart-kit';
 import { useAnalytics } from '../../src/hooks/useAnalytics';
@@ -29,6 +29,7 @@ interface DataPoint {
 interface CategoryItem {
   category: string;
   total: number;
+  description?: string; // Add an optional description property
 }
 
 interface AverageItem {
@@ -120,7 +121,6 @@ export default function AnalyticsScreen() {
         )}
         {!loading && !error && !chartError && (
           <>
-            {/* Total Spending Overview */}
             <Card style={styles.card}>
               <Card.Content>
                 <Title>Total Spending</Title>
@@ -131,8 +131,6 @@ export default function AnalyticsScreen() {
                 </View>
               </Card.Content>
             </Card>
-
-            {/* Expenses by Category Pie Chart */}
             <Card style={styles.card}>
               <Card.Content>
                 <Title>Expenses by Category</Title>
@@ -145,8 +143,6 @@ export default function AnalyticsScreen() {
                 </View>
               </Card.Content>
             </Card>
-
-            {/* Monthly Spending Trend */}
             <Card style={styles.card}>
               <Card.Content>
                 <Title>Monthly Spending Trend</Title>
@@ -178,8 +174,6 @@ export default function AnalyticsScreen() {
                 )}
               </Card.Content>
             </Card>
-
-            {/* Top Categories */}
             <Card style={styles.card}>
               <Card.Content>
                 <Title>Top Categories</Title>
@@ -193,8 +187,6 @@ export default function AnalyticsScreen() {
                 </View>
               </Card.Content>
             </Card>
-
-            {/* Average Spending per Category */}
             <Card style={styles.card}>
               <Card.Content>
                 <Title>Average Spending per Category</Title>
@@ -241,14 +233,17 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: 16,
-    padding: 16, // Ensure sufficient padding
+    padding: 20, // Increase padding for better spacing
+    borderRadius: 12, // Add rounded corners
+    elevation: 3, // Subtle shadow for depth
+    backgroundColor: '#FFFFFF', // Ensure consistent background color
     alignItems: 'center', // Center align content
     justifyContent: 'center', // Center content vertically
-    minHeight: 200, // Set a minimum height to prevent content from being cut off
   },
   chartContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+    marginVertical: 16, // Add spacing around charts
   },
   totalAmountContainer: {
     alignItems: 'center',
@@ -256,11 +251,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   totalAmount: {
-    fontSize: 30, // Further increase font size for better visibility
+    fontSize: 32, // Increase font size for better visibility
     fontWeight: 'bold',
-  
-    // marginTop: 8,
-    color: '#000', // Ensure the text color contrasts with the background
+    color: '#4CAF50', // Match the primary theme color
+    textAlign: 'center',
   },
   averageRow: {
     flexDirection: 'row',

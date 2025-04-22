@@ -582,6 +582,7 @@ export default function DashboardScreen() {
                 mode="contained-tonal"
                 onPress={() => setIsCardModalVisible(true)}
                 style={styles.manageButton}
+                labelStyle={styles.manageButtonText} // Apply text style
               >
                 Add Card
               </Button>
@@ -618,12 +619,14 @@ export default function DashboardScreen() {
         </View>
       </ScrollView>
 
-      <FAB
-        icon="plus"
-        style={styles.fab}
+      <Button
+        mode="contained"
         onPress={openAddExpenseModal}
-        label="Add Expense"
-      />
+        style={styles.addButton}
+        labelStyle={styles.addButtonText} // Apply consistent text style
+      >
+        + Add Expense
+      </Button>
 
       <AddExpenseModal
         visible={isModalVisible}
@@ -668,9 +671,14 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingVertical: 8,
+    backgroundColor: '#F1F8E9', // Lighter green background for the dashboard
   },
   card: {
     marginBottom: 16,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#E8F5E9', // Light green background for cards
+    elevation: 3,
   },
   dropZoneActive: {
     backgroundColor: '#e3f2fd',
@@ -732,6 +740,8 @@ const styles = StyleSheet.create({
     margin: 16,
     right: 0,
     bottom: 0,
+    backgroundColor: '#4CAF50', // Match the green shade of the login button
+    color: '#FFFFFF', // White text color
   },
   itemAmount: {
     fontWeight: 'bold',
@@ -740,7 +750,15 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   manageButton: {
-    marginLeft: 8,
+    backgroundColor: '#4CAF50', // Match the green shade of the login button
+    borderRadius: 8, // Rounded corners like the login button
+    paddingVertical: 8,
+    color: '#FFFFFF', // White text color
+    fontWeight: 'bold', // Bold text for consistency
+  },
+  manageButtonText: {
+    color: '#FFFFFF', // White text color for button text
+    fontWeight: 'bold',
   },
   loadingContainer: {
     flex: 1,
@@ -760,4 +778,16 @@ const styles = StyleSheet.create({
     minHeight: 100,
     paddingVertical: 10,
   },
-}); 
+  addButton: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#4CAF50', // Match the green shade of the login button
+    color: '#FFFFFF', // White text color
+  },
+  addButtonText: {
+    color: '#FFFFFF', // White text color for button text
+    fontWeight: 'bold',
+  },
+});

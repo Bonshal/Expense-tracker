@@ -6,6 +6,7 @@ import {
   Dimensions,
   Animated,
   FlatList,
+  ScrollView,
 } from 'react-native';
 import { Appbar, Card, Title, Paragraph, Button, FAB, Portal, Modal, TextInput, IconButton, Snackbar, ProgressBar, Text } from 'react-native-paper';
 import { useExpenses } from '../../src/hooks/useExpenses';
@@ -309,4 +310,7 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
   },
-}); 
+  scrollView: {
+    flex: 1,
+  },
+});

@@ -30,7 +30,7 @@ const ExpenseCard: React.FC<ExpenseCardProps> = (props) => {
 
   const handleFavoritePress = () => {
     if (props.onToggleFavorite) {
-      props.onToggleFavorite(props.id, props.is_favorite);
+      props.onToggleFavorite(props.id, props.is_favorite ?? false);
     }
   };
 
@@ -118,12 +118,17 @@ const styles = StyleSheet.create({
   card: {
     marginBottom: 10,
     marginHorizontal: 5,
+    borderRadius: 12, // Add rounded corners
+    elevation: 3, // Subtle shadow for depth
+    backgroundColor: '#FFFFFF', // Ensure consistent background color
+    padding: 10, // Add padding for better spacing
   },
   amountText: {
-    fontSize: 16,
+    fontSize: 18, // Slightly larger font size for better readability
     fontWeight: 'bold',
     marginTop: 5,
     textAlign: 'center',
+    color: '#4CAF50', // Match the primary theme color
   },
 });
 

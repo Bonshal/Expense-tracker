@@ -10,20 +10,26 @@ const { LightTheme, DarkTheme } = adaptNavigationTheme({
 // Define custom colors - replace with your preferred palette
 const customLightColors = {
   ...MD3LightTheme.colors,
-  primary: '#6200EE',    // Example Purple
-  accent: '#03DAC5',     // Example Teal
-  background: '#F6F6F6', // Lighter background
+  primary: '#4CAF50',    // Vibrant Green
+  accent: '#FF9800',     // Bright Orange
+  background: '#F1F8E9', // Light Greenish Background
   surface: '#FFFFFF',    // White surface
-  // Add more overrides as needed
+  text: '#212121',       // Dark text for readability
+  error: '#F44336',      // Red for errors
+  onPrimary: '#FFFFFF',  // White text on primary
+  onSurface: '#212121',  // Dark text on surface
 };
 
 const customDarkColors = {
   ...MD3DarkTheme.colors,
-  primary: '#BB86FC',    // Lighter Purple for dark mode
-  accent: '#03DAC5',     // Teal works okay
-  background: '#121212', // Standard dark background
-  surface: '#1E1E1E',    // Slightly lighter dark surface
-  // Add more overrides as needed
+  primary: '#81C784',    // Softer Green for dark mode
+  accent: '#FFB74D',     // Softer Orange
+  background: '#263238', // Dark Blue-Grey Background
+  surface: '#37474F',    // Darker surface
+  text: '#E0E0E0',       // Light text for readability
+  error: '#E57373',      // Softer Red for errors
+  onPrimary: '#000000',  // Black text on primary
+  onSurface: '#E0E0E0',  // Light text on surface
 };
 
 // Define custom fonts - using Inter as loaded in _layout.tsx
@@ -55,4 +61,4 @@ export const AppDarkTheme = {
 // Helper function to configure fonts (might need import from react-native-paper)
 // If configureFonts gives an error, you might need to manually structure the fonts object
 // based on Paper v5 theme type: https://callstack.github.io/react-native-paper/docs/guides/theming-with-react-navigation/#integrating-app-theme-with-react-navigation-theme
-import { configureFonts } from 'react-native-paper'; 
+import { configureFonts } from 'react-native-paper';

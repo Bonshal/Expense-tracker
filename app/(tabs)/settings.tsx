@@ -4,6 +4,7 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  FlatList,
 } from 'react-native';
 import {
   List,
@@ -16,6 +17,7 @@ import {
   IconButton,
   useTheme,
   Switch,
+  Appbar,
 } from 'react-native-paper';
 import { useColorScheme } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -136,111 +138,107 @@ export default function SettingsScreen() {
     }
   };
 
+  interface SettingItem {
+    title: string;
+    description?: string;
+    icon: string;
+    onPress?: () => void;
+    right?: (props: any) => JSX.Element;
+    left?: (props: any) => JSX.Element; // Added left property to the type definition
+  }
+
+  interface AccountItem extends SettingItem {
+    right: (props: any) => JSX.Element;
+  }
+
+  interface BudgetItem extends SettingItem {
+    description: string;
+    right: (props: any) => JSX.Element;
+  }
+
+  const settingsData: (SettingItem | AccountItem | BudgetItem)[] = [
+    {
+      title: t('currency'),
+      description: `Current: ${CURRENCIES.find(c => c.code === currency)?.name || ''}`,
+      icon: 'currency-usd',
+      onPress: () => setShowCurrencyModal(true),
+    },
+    {
+      title: t('language'),
+      description: `Current: ${LANGUAGES.find(l => l.code === language)?.name || ''}`,
+      icon: 'translate',
+      onPress: () => setShowLanguageModal(true),
+    },
+    {
+      title: t('darkMode'),
+      icon: 'theme-light-dark',
+      right: () => (
+        <Switch
+          value={isDarkMode}
+          onValueChange={handleThemeChange}
+        />
+      ),
+    },
+    ...accounts.map((account, index): AccountItem => ({
+      title: account,
+      icon: 'bank',
+      right: props => (
+        <IconButton
+          {...props}
+          icon="delete"
+          onPress={() => handleDeleteAccount(index)}
+        />
+      ),
+    })),
+    {
+      title: t('addAccount'),
+      icon: 'plus',
+      onPress: () => setShowAccountModal(true),
+    },
+    ...Object.entries(budgets).map(([category, amount]): BudgetItem => ({
+      title: category,
+      description: `${CURRENCIES.find(c => c.code === currency)?.symbol || ''}${amount.toFixed(2)}`,
+      icon: 'wallet',
+      right: props => (
+        <IconButton
+          {...props}
+          icon="delete"
+          onPress={() => handleDeleteBudget(category)}
+        />
+      ),
+    })),
+    {
+      title: t('addBudget'),
+      icon: 'plus',
+      onPress: () => setShowBudgetModal(true),
+    },
+    {
+      title: "Log Out",
+      icon: 'logout',
+      onPress: handleLogout, // Fixed the logout functionality
+      left: (props: any) => <List.Icon {...props} icon="logout" />, // Explicitly typed props
+    },
+  ];
+
   return (
-    <ScrollView style={styles.container}>
-      {/* Currency Settings */}
-      <List.Section>
-        <List.Subheader>{t('currency')}</List.Subheader>
-        <List.Item
-          title={t('currency')}
-          description={`Current: ${CURRENCIES.find(c => c.code === currency)?.name}`}
-          left={props => <List.Icon {...props} icon="currency-usd" />}
-          onPress={() => setShowCurrencyModal(true)}
-        />
-      </List.Section>
-
-      {/* Language Settings */}
-      <List.Section>
-        <List.Subheader>{t('language')}</List.Subheader>
-        <List.Item
-          title={t('language')}
-          description={`Current: ${LANGUAGES.find(l => l.code === language)?.name}`}
-          left={props => <List.Icon {...props} icon="translate" />}
-          onPress={() => setShowLanguageModal(true)}
-        />
-      </List.Section>
-
-      {/* Theme Settings */}
-      <List.Section>
-        <List.Subheader>{t('darkMode')}</List.Subheader>
-        <List.Item
-          title={t('darkMode')}
-          left={props => <List.Icon {...props} icon="theme-light-dark" />}
-          right={() => (
-            <Switch
-              value={isDarkMode}
-              onValueChange={handleThemeChange}
-            />
-          )}
-        />
-      </List.Section>
-
-      {/* Account Management */}
-      <List.Section>
-        <List.Subheader>{t('accountManagement')}</List.Subheader>
-        {accounts.map((account, index) => (
+    <>
+      <Appbar.Header>
+        <Appbar.Content title="Settings" />
+      </Appbar.Header>
+      <FlatList
+        data={settingsData}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item }) => (
           <List.Item
-            key={index}
-            title={account}
-            left={props => <List.Icon {...props} icon="bank" />}
-            right={props => (
-              <IconButton
-                {...props}
-                icon="delete"
-                onPress={() => handleDeleteAccount(index)}
-              />
-            )}
+            title={item.title}
+            description={item.description}
+            left={props => <List.Icon {...props} icon={item.icon} />}
+            right={item.right}
+            onPress={item.onPress}
           />
-        ))}
-        <List.Item
-          title={t('addAccount')}
-          left={props => <List.Icon {...props} icon="plus" />}
-          onPress={() => setShowAccountModal(true)}
-        />
-      </List.Section>
-
-      {/* Budget Settings */}
-      <List.Section>
-        <List.Subheader>{t('budgetSettings')}</List.Subheader>
-        {Object.entries(budgets).map(([category, amount]) => (
-          <List.Item
-            key={category}
-            title={category}
-            description={`${CURRENCIES.find(c => c.code === currency)?.symbol}${amount.toFixed(2)}`}
-            left={props => <List.Icon {...props} icon="wallet" />}
-            right={props => (
-              <IconButton
-                {...props}
-                icon="delete"
-                onPress={() => handleDeleteBudget(category)}
-              />
-            )}
-          />
-        ))}
-        <List.Item
-          title={t('addBudget')}
-          left={props => <List.Icon {...props} icon="plus" />}
-          onPress={() => setShowBudgetModal(true)}
-        />
-      </List.Section>
-
-      {/* --- Logout Section --- */}
-      <Divider style={styles.divider} />
-      <List.Section>
-        <List.Subheader>{t('account')}</List.Subheader>
-        <Button
-          mode="contained"
-          icon="logout"
-          onPress={handleLogout}
-          loading={isLoggingOut}
-          disabled={isLoggingOut}
-          style={[styles.button, { backgroundColor: theme.colors.error }]}
-        >
-          {t('logout')}
-        </Button>
-      </List.Section>
-
-      {/* Currency Selection Modal */}
+        )}
+        contentContainerStyle={styles.scrollView}
+      />
       <Portal>
         <Modal
           visible={showCurrencyModal}
@@ -262,7 +260,6 @@ export default function SettingsScreen() {
         </Modal>
       </Portal>
 
-      {/* Language Selection Modal */}
       <Portal>
         <Modal
           visible={showLanguageModal}
@@ -283,7 +280,6 @@ export default function SettingsScreen() {
         </Modal>
       </Portal>
 
-      {/* Add Account Modal */}
       <Portal>
         <Modal
           visible={showAccountModal}
@@ -303,7 +299,6 @@ export default function SettingsScreen() {
         </Modal>
       </Portal>
 
-      {/* Add Budget Modal */}
       <Portal>
         <Modal
           visible={showBudgetModal}
@@ -329,12 +324,15 @@ export default function SettingsScreen() {
           </Button>
         </Modal>
       </Portal>
-    </ScrollView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  scrollView: {
     flex: 1,
   },
   modal: {
@@ -367,4 +365,4 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 20,
   },
-}); 
+});

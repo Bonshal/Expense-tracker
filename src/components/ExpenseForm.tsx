@@ -125,5 +125,6 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 8,
+    color: '#FFFFFF', // Set button text color to white
   },
-}); 
+});
