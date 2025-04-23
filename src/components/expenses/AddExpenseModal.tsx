@@ -12,7 +12,7 @@ import {
   Title,
   HelperText,
 } from 'react-native-paper';
-// import DateTimePicker from '@react-native-community/datetimepicker'; // Install if needed
+import DateTimePicker from '@react-native-community/datetimepicker'; // Import the DateTimePicker
 
 interface AddExpenseModalProps {
   visible: boolean;
@@ -133,7 +133,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
         </Button>
 
         {/* Date Picker - Requires @react-native-community/datetimepicker */}
-        {/* {showDatePicker && (
+        {showDatePicker && (
           <DateTimePicker
             testID="dateTimePicker"
             value={date}
@@ -141,7 +141,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
             display="default" // Or 'spinner'
             onChange={handleDateChange}
           />
-        )} */}
+        )}
         <HelperText type="info">Date Picker needs library install</HelperText>
 
         <View style={styles.buttonContainer}>
@@ -188,4 +188,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddExpenseModal; 
+export default AddExpenseModal;

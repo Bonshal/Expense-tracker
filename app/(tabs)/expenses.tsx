@@ -151,8 +151,8 @@ export default function ExpensesScreen() {
 
   return (
     <View style={styles.container}>
-      <Appbar.Header>
-        <Appbar.Content title="Expenses" />
+      <Appbar.Header style={{ backgroundColor: '#4CAF50' }}>
+        <Appbar.Content title="Expenses" titleStyle={{ color: '#FFFFFF' }} />
       </Appbar.Header>
       <FlatList
         data={expenses}

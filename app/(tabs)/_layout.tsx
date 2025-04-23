@@ -9,7 +9,7 @@ export default function TabLayout() {
         // Disable the header for all screens in this navigator.
         headerShown: false,
         // You can add other default screen options here
-        // e.g., tabBarActiveTintColor: 'blue',
+        tabBarActiveTintColor: 'green',
       }}
     >
       <Tabs.Screen
@@ -50,4 +50,4 @@ export default function TabLayout() {
       />
     </Tabs>
   );
-} 
+}

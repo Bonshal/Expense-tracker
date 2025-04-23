@@ -68,7 +68,7 @@ const ExpenseCard: React.FC<ExpenseCardProps> = (props) => {
       <Card.Title
         title={props.name}
         titleNumberOfLines={1}
-        subtitle={props.category ? `Cat: ${props.category}` : 'No Category'}
+        subtitle={props.category ? props.category : 'No Category'}
         subtitleNumberOfLines={1}
         // Conditionally render the right prop (Menu) only if NOT dragging
         right={props.isDragging ? undefined : (menuProps) => (
@@ -124,11 +124,23 @@ const styles = StyleSheet.create({
     padding: 10, // Add padding for better spacing
   },
   amountText: {
-    fontSize: 18, // Slightly larger font size for better readability
+    fontSize: 20, // Increase font size for better visibility
     fontWeight: 'bold',
     marginTop: 5,
     textAlign: 'center',
     color: '#4CAF50', // Match the primary theme color
+    fontFamily: 'OpenSans-Bold', // Use a better font for aesthetics
+  },
+  titleText: {
+    fontSize: 18, // Adjust title font size for better readability
+    fontWeight: '600',
+    fontFamily: 'OpenSans-Medium', // Use a medium font for titles
+  },
+  subtitleText: {
+    fontSize: 14, // Make the font size smaller for better visibility
+    fontFamily: 'OpenSans-Regular', // Use a regular font for subtitles
+    color: '#757575', // Subtle color for subtitles
+    textAlign: 'center', // Center align the text for better aesthetics
   },
 });
 

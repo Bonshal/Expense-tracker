@@ -527,9 +527,11 @@ export default function DashboardScreen() {
   const animatedDropZoneStyle = useAnimatedStyle(() => {
     return {
         backgroundColor: isDraggingShared.value ? '#e3f2fd' : undefined, // Set to undefined or a default background color
-        borderColor: isDraggingShared.value ? '#2196f3' : 'transparent',
-        borderWidth: isDraggingShared.value ? 2 : 0,
+        borderColor: isDraggingShared.value ? '#2196f3' : '#BDBDBD', // Restore border color when not dragging
+        borderWidth: isDraggingShared.value ? 2 : 1, // Restore border width when not dragging
         borderStyle: isDraggingShared.value ? 'dashed' : 'solid',
+        shadowColor: 'transparent', // Ensure no shadow is visible
+        shadowOpacity: 0, // Ensure no shadow is visible
     };
   });
 
@@ -551,8 +553,8 @@ export default function DashboardScreen() {
 
   return (
     <View style={styles.container}>
-      <Appbar.Header>
-        <Appbar.Content title="Dashboard" />
+      <Appbar.Header style={{ backgroundColor: '#4CAF50' }}>
+        <Appbar.Content title="Dashboard" titleStyle={{ color: '#FFFFFF' }} />
       </Appbar.Header>
       <ScrollView
         ref={scrollViewRef}
@@ -562,13 +564,13 @@ export default function DashboardScreen() {
       >
         <Card style={styles.card}>
           <Card.Content>
-            <Title>Overview</Title>
+            <Title style={styles.cardTitle}>Overview</Title>
             {loadingExpenses ? (
               <ActivityIndicator animating={true} />
             ) : (
               <>
-                <Paragraph>Monthly Total: {currencySymbol}{monthlyTotal.toFixed(2)}</Paragraph>
-                <Paragraph>Today's Total: {currencySymbol}{dailyTotal.toFixed(2)}</Paragraph>
+                <Paragraph style={styles.overviewText}>Monthly Total: {currencySymbol}{monthlyTotal.toFixed(2)}</Paragraph>
+                <Paragraph style={styles.overviewText}>Today's Total: {currencySymbol}{dailyTotal.toFixed(2)}</Paragraph>
               </>
             )}
           </Card.Content>
@@ -577,16 +579,16 @@ export default function DashboardScreen() {
         <Card style={styles.card}>
           <Card.Content>
             <View style={styles.cardHeaderContainer}>
-              <Title>Quick Add Expense Cards</Title>
-              <Button
-                mode="contained-tonal"
-                onPress={() => setIsCardModalVisible(true)}
-                style={styles.manageButton}
-                labelStyle={styles.manageButtonText} // Apply text style
-              >
-                Add Card
-              </Button>
+              <Title style={styles.cardTitle}>Quick Add Expense Cards</Title>
             </View>
+            <Button
+              mode="contained-tonal"
+              onPress={() => setIsCardModalVisible(true)}
+              style={styles.manageButton}
+              labelStyle={styles.manageButtonText} // Apply text style
+            >
+              Add Card
+            </Button>
             {renderDraggableContent()}
           </Card.Content>
         </Card>
@@ -594,7 +596,7 @@ export default function DashboardScreen() {
         <View ref={todayExpensesCardRef} onLayout={onTodayExpensesLayout} collapsable={false}>
           <Animated.View style={[styles.card, animatedDropZoneStyle]}>
             <Card.Content>
-              <Title>Today's Expenses</Title>
+              <Title style={styles.cardTitle}>Today's Expenses</Title>
               {loadingExpenses && <ActivityIndicator animating={true} />}
               {errorExpenses && <Paragraph style={styles.errorText}>Could not load today's expenses.</Paragraph>}
               {!loadingExpenses && !errorExpenses && (
@@ -633,6 +635,12 @@ export default function DashboardScreen() {
         onDismiss={closeAddExpenseModal}
         onSubmit={handleAddExpenseFromModal}
         submitting={addingExpense}
+        initialValues={{
+          amount: 0,
+          description: '',
+          category: '',
+          date: new Date(), // Default to today's date
+        }}
       />
       <AddExpenseCardModal
         visible={isCardModalVisible}
@@ -675,10 +683,25 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: 16,
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: '#E8F5E9', // Light green background for cards
-    elevation: 3,
+    padding: 20, // Increase padding for better spacing
+    borderRadius: 12, // Add rounded corners
+    elevation: 3, // Subtle shadow for depth
+    backgroundColor: '#FFFFFF', // Ensure consistent background color
+  },
+  cardTitle: {
+    fontSize: 24, // Increase font size for better visibility
+    fontWeight: 'bold', // Make the text bold
+    textAlign: 'center', // Center align the text
+    color: '#4CAF50', // Match the primary theme color
+    marginBottom: 8, // Add spacing below the title
+  },
+  overviewText: {
+    fontSize: 18, // Increase font size for better readability
+    fontWeight: '600', // Use a semi-bold font for better aesthetics
+    fontFamily: 'OpenSans-Medium', // Use a medium font for details
+    color: '#424242', // Darker color for better contrast
+    marginVertical: 4, // Add spacing between lines
+    textAlign: 'center', // Center align the text
   },
   dropZoneActive: {
     backgroundColor: '#e3f2fd',
@@ -752,13 +775,15 @@ const styles = StyleSheet.create({
   manageButton: {
     backgroundColor: '#4CAF50', // Match the green shade of the login button
     borderRadius: 8, // Rounded corners like the login button
-    paddingVertical: 8,
-    color: '#FFFFFF', // White text color
-    fontWeight: 'bold', // Bold text for consistency
+    paddingVertical: 6, // Reduce padding for a smaller button
+    paddingHorizontal: 12, // Adjust horizontal padding for better size
+    alignSelf: 'flex-start', // Position below the heading
+    marginTop: 8, // Add spacing below the heading
   },
   manageButtonText: {
     color: '#FFFFFF', // White text color for button text
     fontWeight: 'bold',
+    fontSize: 14, // Slightly smaller font size
   },
   loadingContainer: {
     flex: 1,

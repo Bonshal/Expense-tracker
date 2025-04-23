@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,9 @@ import { useSettings } from '../../src/contexts/SettingsContext';
 import { CURRENCIES } from '../../src/constants/currencies';
 import BarChart from '../../src/components/charts/BarChart';
 import PieChartWrapper from '../../src/components/charts/PieChartWrapper';
+import { supabase } from '../../src/services/supabase'; // Corrected supabase import path
+import { useAuth } from '../../src/contexts/AuthContext'; // Corrected AuthContext import path
+import MonthlySpendingTrend from '../../src/components/charts/MonthlySpendingTrend'; // Corrected import path
 
 // Color scale for charts
 const colorScale = ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40"];
@@ -48,7 +51,9 @@ interface AnalyticsData {
 export default function AnalyticsScreen() {
   const { expenses, loading, error, refetchExpenses } = useExpenses();
   const { currency } = useSettings();
+  const { user } = useAuth(); // Add user from AuthContext
   const [chartError, setChartError] = useState(false);
+  const [monthlyData, setMonthlyData] = useState<DataPoint[]>([]); // Add state for monthly data
   
   // Add try-catch to handle potential errors in data processing
   const defaultAnalyticsData: AnalyticsData = {
@@ -68,7 +73,7 @@ export default function AnalyticsScreen() {
     setChartError(true);
   }
   
-  const { categoryData, monthlyData, topCategories, totalSpending, averageSpendingPerCategory } = analyticsData;
+  const { categoryData, topCategories, totalSpending, averageSpendingPerCategory } = analyticsData;
 
   const currencySymbol = CURRENCIES.find(c => c.code === currency)?.symbol || '$';
   const screenWidth = Dimensions.get('window').width;
@@ -102,10 +107,43 @@ export default function AnalyticsScreen() {
     }],
   };
 
+  const fetchMonthlyData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('amount, date');
+
+      if (error) {
+        console.error('Error fetching monthly data:', error);
+        return;
+      }
+
+      const monthlyTotals = data.reduce((acc: Record<string, number>, expense: { date: string; amount: number }) => {
+        const date = new Date(expense.date);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        acc[monthKey] = (acc[monthKey] || 0) + expense.amount;
+        return acc;
+      }, {});
+
+      const formattedData = Object.entries(monthlyTotals).map(([month, total]) => ({
+        x: month,
+        y: total as number,
+      }));
+
+      setMonthlyData(formattedData as DataPoint[]);
+    } catch (err) {
+      console.error('Error processing monthly data:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchMonthlyData();
+  }, []);
+
   return (
     <View style={styles.container}>
-      <Appbar.Header>
-        <Appbar.Content title="Analytics" />
+      <Appbar.Header style={{ backgroundColor: '#4CAF50' }}>
+        <Appbar.Content title="Analytics" titleStyle={{ color: '#FFFFFF' }} />
       </Appbar.Header>
       <ScrollView style={styles.scrollView}>
         {loading && (
@@ -123,7 +161,7 @@ export default function AnalyticsScreen() {
           <>
             <Card style={styles.card}>
               <Card.Content>
-                <Title>Total Spending</Title>
+                <Title style={styles.cardTitle}>Total Spending</Title>
                 <View style={styles.totalAmountContainer}>
                   <Text style={styles.totalAmount}>
                     {currencySymbol}{(totalSpending || 0).toFixed(2)}
@@ -133,7 +171,7 @@ export default function AnalyticsScreen() {
             </Card>
             <Card style={styles.card}>
               <Card.Content>
-                <Title>Expenses by Category</Title>
+                <Title style={styles.cardTitle}>Expenses by Category</Title>
                 <View style={styles.chartContainer}>
                   <PieChartWrapper
                     data={pieChartData}
@@ -145,38 +183,13 @@ export default function AnalyticsScreen() {
             </Card>
             <Card style={styles.card}>
               <Card.Content>
-                <Title>Monthly Spending Trend</Title>
-                {Array.isArray(monthlyData) && monthlyData.length > 1 ? (
-                  <View style={styles.chartContainer}>
-                    <LineChart
-                      data={lineChartData}
-                      width={chartWidth}
-                      height={220}
-                      chartConfig={{
-                        backgroundColor: '#ffffff',
-                        backgroundGradientFrom: '#ffffff',
-                        backgroundGradientTo: '#ffffff',
-                        decimalPlaces: 0,
-                        color: (opacity = 1) => `rgba(255, 99, 132, ${opacity})`,
-                        style: {
-                          borderRadius: 16,
-                        },
-                      }}
-                      bezier
-                      style={{
-                        marginVertical: 8,
-                        borderRadius: 16,
-                      }}
-                    />
-                  </View>
-                ) : (
-                  <Paragraph>No monthly data to display.</Paragraph>
-                )}
+                <Title style={styles.cardTitle}>Monthly Spending Trend</Title>
+                <MonthlySpendingTrend data={monthlyData} width={chartWidth} />
               </Card.Content>
             </Card>
             <Card style={styles.card}>
               <Card.Content>
-                <Title>Top Categories</Title>
+                <Title style={styles.cardTitle}>Top Categories</Title>
                 <View style={styles.chartContainer}>
                   <BarChart
                     data={barChartData}
@@ -189,7 +202,7 @@ export default function AnalyticsScreen() {
             </Card>
             <Card style={styles.card}>
               <Card.Content>
-                <Title>Average Spending per Category</Title>
+                <Title style={styles.cardTitle}>Average Spending per Category</Title>
                 {Array.isArray(averageSpendingPerCategory) && averageSpendingPerCategory.length > 0 ? (
                   averageSpendingPerCategory.map(({ category, average }) => (
                     <View key={category} style={styles.averageRow}>
@@ -240,6 +253,13 @@ const styles = StyleSheet.create({
     alignItems: 'center', // Center align content
     justifyContent: 'center', // Center content vertically
   },
+  cardTitle: {
+    fontSize: 24, // Increase font size for better visibility
+    fontWeight: 'bold', // Make the text bold
+    textAlign: 'center', // Center align the text
+    color: '#4CAF50', // Match the primary theme color
+    marginBottom: 8, // Add spacing below the title
+  },
   chartContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -261,5 +281,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 4,
+  },
+  chartDescription: {
+    marginTop: 8,
+    textAlign: 'center',
+    color: '#7F7F7F',
   },
 });

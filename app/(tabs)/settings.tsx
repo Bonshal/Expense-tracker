@@ -179,6 +179,13 @@ export default function SettingsScreen() {
         />
       ),
     },
+    {
+      title: "Profile",
+      description: "View and update your profile details",
+      icon: 'account-circle',
+      // Removed the profile route navigation
+      // onPress: () => router.push('/(tabs)/profile'),
+    },
     ...accounts.map((account, index): AccountItem => ({
       title: account,
       icon: 'bank',
@@ -222,8 +229,8 @@ export default function SettingsScreen() {
 
   return (
     <>
-      <Appbar.Header>
-        <Appbar.Content title="Settings" />
+      <Appbar.Header style={{ backgroundColor: '#4CAF50' }}>
+        <Appbar.Content title="Settings" titleStyle={{ color: '#FFFFFF' }} />
       </Appbar.Header>
       <FlatList
         data={settingsData}
